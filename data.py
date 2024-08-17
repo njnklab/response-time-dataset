@@ -15,7 +15,7 @@ class Data():
     - split_point (tuple): The split points for categorizing scores.
     """
 
-    def __init__(self, scale_path) -> None:
+    def __init__(self, scale_path, is_remove_outlier=False) -> None:
         """
         Initialize the Data class.
 
@@ -28,10 +28,15 @@ class Data():
         self.scale_path = Path(f'~/proj/rt-dataset/src/data/{scale_path}.csv')
         self.scale_name = Path(self.scale_path).stem
         self.df = pd.read_csv(self.scale_path)
-        self.df['is_careless_response'] = self.df.apply(self._is_careless_response, axis=1)
+        # self.df['is_careless_response'] = self.df.apply(self._is_careless_response, axis=1)
         self.df['total_response_time'] = self.df.apply(self._get_total_response_time, axis=1)
-        self.split_point = self._get_split_point()
-        self.df['label'] = self.df['score'] >= self.split_point[0]
+        self._is_outlier()
+        # self.split_point = self._get_split_point()
+        # self.df = self.df[(self.df['score'] >= self.split_point[-2]) | (self.df['score']  < self.split_point[0])]
+        # self.df['label'] = self.df['score'] >= self.split_point[-2]
+        self.df = self.df.dropna()
+        if is_remove_outlier:
+            self.df = self.df[~self.df['outlier']]
     
     def sever_prop(self):
         """
@@ -55,14 +60,13 @@ class Data():
         df['category'] = df['score'].apply(lambda x: classify(x, breakpoints, labels))
         # cal count
         category_counts = df.groupby('category').size()
-        category_cr_counts = df.groupby('category')['is_careless_response'].sum()
+        # category_cr_counts = df.groupby('category')['is_careless_response'].sum()
         # cal ratio
         total = len(df)
         category_proportions = (category_counts / total * 100).map("{:.2f}%".format)
         # save result
-        result = pd.DataFrame({'Count': category_counts, 'Proportion': category_proportions, 
-                                'CR_Count': category_cr_counts})
-        result['CR_Proportion'] = (result['CR_Count'] / result['Count'] * 100).map("{:.2f}%".format)
+        result = pd.DataFrame({'Count': category_counts, 'Proportion': category_proportions})
+        # result['CR_Proportion'] = (result['CR_Count'] / result['Count'] * 100).map("{:.2f}%".format)
         return result
 
     def _get_total_response_time(self, row):
@@ -81,7 +85,7 @@ class Data():
 
         return np.sum(arr)
     
-    def _is_careless_response(self, row):
+    def _is_outlier(self):
         """
         Checks if a response is considered careless based on the given row.
 
@@ -93,15 +97,18 @@ class Data():
         - bool
             True if the response is considered careless, False otherwise.
         """
-        # get rt columns
-        arr = row.filter(regex='.*time.*').values
+        def mad(series):
+            median = series.median()
+            mad = np.median(np.abs(series - median))
+            return mad
+        # time_col = [col for col in self.df.columns if col.startswith('time')]
+        df_time = self.df
 
-        if np.mean(arr) <= 1.5:
-            return True
-        elif np.max(arr) > 40:
-            return True
-        else:
-            return False
+        col = 'total_response_time'
+        median = df_time[col].median()
+        mad_value = mad(df_time[col])
+        outliers = np.abs(df_time[col] - median) / mad_value > 5
+        self.df['outlier'] = outliers
         
     def _get_split_point(self):
         """

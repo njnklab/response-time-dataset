@@ -121,17 +121,22 @@ bss_cols_rename = ['export_id', 'score',
                     'question18', 'time18',
                     'question19', 'time19']
 
-# rename columns
-df[demographic_cols].rename(columns=dict(zip(demographic_cols, demographic_cols_rename)))    \
-    .to_csv('../data/demographic.csv', index=False)
-df[phq9_cols].rename(columns=dict(zip(phq9_cols, phq9_cols_rename)))    \
-    .to_csv('../data/phq9.csv', index=False)
-df[gad7_cols].rename(columns=dict(zip(gad7_cols, gad7_cols_rename)))    \
-    .to_csv('../data/gad7.csv', index=False)
-df[pss_cols].rename(columns=dict(zip(pss_cols, pss_cols_rename)))    \
-    .to_csv('../data/pss.csv', index=False)
-df[isi_cols].rename(columns=dict(zip(isi_cols, isi_cols_rename)))    \
-    .to_csv('../data/isi.csv', index=False)
-df[bss_cols].rename(columns=dict(zip(bss_cols, bss_cols_rename)))    \
-    .to_csv('../data/bss.csv', index=False)
+def read_context(cols):
+    # remove end with '_time'
+    question_context = [col for col in cols if not col.endswith('_time')]
+    question_context = [qc for qc in question_context if qc != 'export_id']
+    question_context = [qc for qc in question_context if '得分' not in qc]
+    question_context = [qc.split('t')[0] for qc in question_context]
+
+    df = pd.DataFrame(columns=['question_context', 'word_count'])
+    df['Question_Context'] = question_context
+    df['Word_Count'] = df['Question_Context'].str.len()
+
+    df['Index'] = df.index + 1
+    return df
+
+read_context(phq9_cols)[['Index', 'Question_Context', 'Word_Count']].to_csv('./metadata/PHQ-9.csv', index=False)
+read_context(gad7_cols)[['Index', 'Question_Context', 'Word_Count']].to_csv('./metadata/GAD-7.csv', index=False)
+read_context(pss_cols)[['Index', 'Question_Context', 'Word_Count']].to_csv('./metadata/PSS.csv', index=False)
+read_context(isi_cols)[['Index', 'Question_Context', 'Word_Count']].to_csv('./metadata/ISI.csv', index=False)
 
