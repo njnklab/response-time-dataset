@@ -1,6 +1,7 @@
 # Response Time Dataset
 
-This repository is dedicated to the construction and analysis of response time dataset.
+This repository is dedicated to the construction and analysis of response time dataset. The specific contents of the psychological scales used in this project are placed in the "metadata" folder.
+The content for data cleaning and simple processing is placed in the "scripts" folder.
 
 ## 1. data-inspect.ipynb
 
@@ -24,5 +25,4 @@ Generalized Linear Mixed Models (GLMM) analysis
 
 
 
-The specific contents of the psychological scales used in this project are placed in the "metadata" folder.
-The content for data cleaning and simple processing is placed in the "scripts" folder.
+
