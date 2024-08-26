@@ -21,3 +21,8 @@ Distribution of population groups with different severity levels according to re
 ## 5. statistical-analysis.ipynb
 
 Generalized Linear Mixed Models (GLMM) analysis
+
+
+
+The specific contents of the psychological scales used in this project are placed in the "metadata" folder.
+The content for data cleaning and simple processing is placed in the "scripts" folder.
